@@ -18,6 +18,7 @@ var boot = function(){
 			var radioNode = document.createElement("input");
 			radioNode.type = "radio";
 			radioNode.id = name;
+			radioNode.setAttribute("class",name);
 			radioNode.name = name;
 			radioNode.value = value;
 			var textNode = document.createTextNode(text);

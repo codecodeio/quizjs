@@ -1,5 +1,9 @@
 "use strict";//enable strict mode (ECMAScript 5)
 
-var quiz = new Quiz();
+$(document).ready(
+	function(){
+		window.quiz = new Quiz();
 
-window.quiz.addQuestionPage();
+		window.quiz.addQuestionPage();
+	}
+);
