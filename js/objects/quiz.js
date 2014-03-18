@@ -58,7 +58,7 @@ Quiz.prototype.createResultsPage = function(){
 Quiz.prototype.eventHandler = function(){
     switch(event.target.id){
         case "choices-submit":
-            EventUtil.preventDefault(event);
+            event.preventDefault();
             
             var submitButtonNode = $(this).find("#choices-submit");
             var formNode = submitButtonNode.closest("form");
@@ -101,7 +101,7 @@ Quiz.prototype.eventHandler = function(){
             }
             break;
         case "choices-next":
-            EventUtil.preventDefault(event);
+            event.preventDefault();
             
             if (window.quiz.currentQuestion+1 < window.quiz.allQuestions.length) {
                 window.quiz.incrementCurrentQuestion();
@@ -112,7 +112,7 @@ Quiz.prototype.eventHandler = function(){
             }
             break;
         case "back-btn":
-            EventUtil.preventDefault(event);
+            event.preventDefault();
             
             if (window.quiz.currentQuestion > 0) {
                 window.quiz.decrementCurrentQuestion();
