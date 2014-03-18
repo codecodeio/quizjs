@@ -2,8 +2,13 @@
 
 $(document).ready(
 	function(){
-		window.quiz = new Quiz();
+		window.createHeader();
 
-		window.quiz.addQuestionPage();
+		if (localStorage.getItem("name") == null){
+		    window.createLoginPage();
+		}
+		else{
+			window.start();
+ 		}
 	}
 );

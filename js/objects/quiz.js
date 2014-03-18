@@ -6,174 +6,120 @@ function Quiz() {
     //Public Variables
     this.currentQuestion = 0;
 
-    this.allQuestions = [
-        {
-            question: "Which JavaScript framework runs on the client and server?",
-            choices: ["Meteor", "Angular", "Ember", "Batman", "Backbone"],
-            correctAnswer: 0,
-            answer: null
-        },
-        {
-            question: "Is Node ready to be a production web server?",
-            choices: ["Yes", "No"],
-            correctAnswer: 0,
-            answer: null
-        },
-        {
-            question: "What is the best way to decouple HTML from JavaScript?",
-            choices: ["Underscore.js", "Handlebars.js","Mustache.js","EJS","Dust.js"],
-            correctAnswer: 1,
-            answer: null
-        }
-    ];
-
+    this.allQuestions = [];
 }
 app.inheritPrototype(Quiz, MasterBean);
 
 Quiz.prototype.incrementCurrentQuestion = function () {
     this.currentQuestion++;
 };
-
-Quiz.prototype.displayNextQuestion = function () {
-    this.displayQuestion();
-    this.displayChoices();
+Quiz.prototype.decrementCurrentQuestion = function () {
+    this.currentQuestion--;
 };
 
-Quiz.prototype.addQuestionPage = function () {
-    var questionPageNode = document.getElementById("questionPage");
-    var questionNode = boot.col("questionSection", 12);
-    var choicesNode = boot.col("choicesSection", 12);
-    questionPageNode.appendChild(questionNode);
-    questionPageNode.appendChild(choicesNode);
-    EventUtil.addHandler(questionPageNode, "click", this.questionPageEventHandler);
+Quiz.prototype.createQuestionPage = function(){
+    
+    var pageNode = window.setPage();
 
-    this.displayNextQuestion();
-};
+    if(this.allQuestions.length > 0){
+        pageNode.on("click",this.eventHandler);
 
-Quiz.prototype.removeQuestionPage = function(){
-    var questionPageNode = document.getElementById("questionPage");
-    questionPageNode.onclick = null;
-    questionPageNode.innerHTML = null;
-};
-
-Quiz.prototype.displayQuestion = function(index){
-    index = this.currentQuestion;
-    var elem = document.getElementById("questionSection");
-    var h4Node = document.createElement("h4");
-    var questionNode = document.createTextNode(index+1 + ". " + this.allQuestions[index].question);
-
-    h4Node.appendChild(questionNode);
-
-    elem.appendChild(h4Node);
-};
-
-Quiz.prototype.displayChoices = function(index){
-    index = this.currentQuestion;
-    var elem = document.getElementById("choicesSection");
-
-    var choiceMessageNode = document.createElement("div");
-    choiceMessageNode.setAttribute("id","choiceMessage");
-    elem.appendChild(choiceMessageNode);
-
-    var formNode = boot.form("choices","");
-
-    for(var i=0; i<this.allQuestions[index].choices.length; i++){
-        var radioNode = boot.radio("answer",i,this.allQuestions[index].choices[i]);
-        formNode.appendChild(radioNode);
+        this.allQuestions[this.currentQuestion].num = this.currentQuestion + 1;
+        if(this.currentQuestion > 0){
+            this.allQuestions[this.currentQuestion].displayBackButton = true;
+        } else {
+            this.allQuestions[this.currentQuestion].displayBackButton = false;
+        }
+        Handlebars.registerHelper("alreadySelected",function(idx){
+            if(window.quiz.allQuestions[window.quiz.currentQuestion].answer == idx){
+                return "checked";
+            }
+            else {
+                return "";
+            }
+        });
+        var context = this.allQuestions[this.currentQuestion];
+        var rendered_html = render('question', context);
+        window.loadPage(pageNode,rendered_html);
     }
+    else {
+        window.loadPage(pageNode,"Questions not available at this time :(");
+    }
+}
 
-    var submitNode = boot.submit("choices-submit","Submit");
-    formNode.appendChild(submitNode);
+Quiz.prototype.createResultsPage = function(){
+    
+    var pageNode = window.setPage();
+    var context = {grade: this.calculateGrade()};
+    var rendered_html = render('results', context);
+    window.loadPage(pageNode,rendered_html);
+}
 
-    elem.appendChild(formNode);
-
-    this.set("currentQuestion",index);
-};
-
-Quiz.prototype.questionPageEventHandler = function(){
-    var event = EventUtil.getEvent(event);
-    var target = EventUtil.getTarget(event);
-
-    switch(target.id){
+Quiz.prototype.eventHandler = function(){
+    switch(event.target.id){
         case "choices-submit":
             EventUtil.preventDefault(event);
             
-            //var answers = $("#choices").find("input");
-            var answers = document.body.querySelectorAll("#answer");
-            //var formNode = document.getElementById("choicesSection");
-            //alert(formNode.elements.length);
-            //var answers = formNode.elements[0];
-            var selected = DomUtil.selected(answers);
+            var submitButtonNode = $(this).find("#choices-submit");
+            var formNode = submitButtonNode.closest("form");
+            var selectedNode = formNode.find("input:checked");
+            var selected = selectedNode.val();
+            var inputNodes = formNode.find("input");
 
-            var messageNode = document.getElementById("choiceMessage");
-            messageNode.innerHTML = "";
-            //alert(window.quiz.allQuestions[window.quiz.currentQuestion].correctAnswer + " " + selected)
-            
-            if(selected === null){
-                messageNode.appendChild(boot.alert("danger","You must select an answer!"));
+            if(!selected){
+                formNode.parent().find("#notice").remove();
+                formNode.after('<p id="notice" class="text-danger">You must select an answer!</p>');
             }
             else {
                 window.quiz.allQuestions[window.quiz.currentQuestion].answer = selected;
+                formNode.parent().find("#notice").remove();
 
-                DomUtil.removeNode("choices-submit");
-
-                if(window.quiz.allQuestions[window.quiz.currentQuestion].correctAnswer === selected){
-                    messageNode.appendChild(boot.alert("success","Correct!"));
-                }
-                else {
-                    messageNode.appendChild(boot.alert("warning","WRONG!"));
-                }
-
-                var formNode = document.getElementById("choicesSection");
-                var buttonNode = boot.button("choices-next","Next","success");
-                formNode.appendChild(buttonNode);
+                var thisNode;
+                inputNodes.each(function(){
+                    thisNode = $(this);
+                    thisNode.attr("disabled","disabled");
+                    if(thisNode.val() == selected){
+                        if(window.quiz.allQuestions[window.quiz.currentQuestion].correctAnswer == thisNode.val()){
+                            selectedNode.closest("div").addClass("text-success");
+                            formNode.parent().find("#notice").remove();
+                            formNode.after('<p id="notice" class="text-success">Yay, that is correct :)</p>');
+                            submitButtonNode.addClass("btn-success");
+                        }
+                        else {
+                            selectedNode.closest("div").addClass("text-danger");
+                            formNode.parent().find("#notice").remove();
+                            formNode.after('<p id="notice" class="text-danger">Sorry, that is incorrect :(</p>');
+                            submitButtonNode.addClass("btn-warning");
+                        }
+                    }
+                });
+                
+                
+                submitButtonNode.removeClass("btn-default");
+                submitButtonNode.attr("id","choices-next");
+                submitButtonNode.html("Continue");
             }
             break;
-
         case "choices-next":
+            EventUtil.preventDefault(event);
+            
             if (window.quiz.currentQuestion+1 < window.quiz.allQuestions.length) {
                 window.quiz.incrementCurrentQuestion();
-                window.quiz.resetQuestionPage();
-                window.quiz.displayNextQuestion();
+                window.quiz.createQuestionPage();
+
             } else {
-                window.quiz.loadResultsPage();
+                window.quiz.createResultsPage();
+            }
+            break;
+        case "back-btn":
+            EventUtil.preventDefault(event);
+            
+            if (window.quiz.currentQuestion > 0) {
+                window.quiz.decrementCurrentQuestion();
+                window.quiz.createQuestionPage();
             }
             break;
     }  
-};
-
-Quiz.prototype.resetQuestionPage = function(){
-    var questionNode = document.getElementById("questionSection");
-    questionNode.innerHTML = null;
-    var choicesNode = document.getElementById("choicesSection");
-    choicesNode.innerHTML = null;
-};
-
-Quiz.prototype.loadResultsPage = function(){
-    window.quiz.removeQuestionPage();
-
-    var headerNode = boot.col("results","12");
-
-    var h4Node = document.createElement("h4");
-    var titleNode = document.createTextNode("Quiz Complete!");
-
-    headerNode.appendChild(h4Node);
-    h4Node.appendChild(titleNode);
-
-    var grade = this.calculateGrade();
-
-    var summaryNode = boot.col("summary","12");
-    var summaryTextNode = document.createTextNode("Grade: " + grade + "%");
-    summaryNode.appendChild(summaryTextNode);
-
-    var buttonSectionNode = boot.col("startover","12");
-    var anchorNode = boot.anchor("restart","Start Over","primary","index.html");
-    buttonSectionNode.appendChild(anchorNode);
-
-    var resultsNode = document.getElementById("resultsPage");
-    resultsNode.appendChild(headerNode);
-    resultsNode.appendChild(summaryNode);
-    resultsNode.appendChild(buttonSectionNode);
 };
 
 Quiz.prototype.calculateGrade = function () {

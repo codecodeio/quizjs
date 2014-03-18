@@ -1,0 +1,15 @@
+{{#if displayBackButton}}
+ <button type="button" class="btn btn-primary btn-xs" id="back-btn">back</button>
+{{/if}}
+<h3>{{num}}. {{question}}</h3>
+<form role="form" id="questionForm">
+	{{#each choices}}
+	<div class="radio">
+	  <label>
+	  	<input type="radio" name="optionsAnswers" id="optionsAnswers{{@index}}" value="{{@index}}" {{alreadySelected @index}}>{{this}}
+	  </label>
+	</div>
+	{{/each}}
+
+	<button type="submit" class="btn btn-default" id="choices-submit">Submit</button>
+</form>

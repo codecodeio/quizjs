@@ -1,0 +1,21 @@
+
+[
+	{
+	"question": "Which JavaScript framework runs on the client and server?",
+	"choices": ["Meteor", "Angular", "Ember", "Batman", "Backbone"],
+	"correctAnswer": 0,
+	"answer": null
+	},
+	{
+	"question": "Is Node ready to be a production web server?",
+	"choices": ["Yes", "No"],
+	"correctAnswer": 0,
+	"answer": null
+	},
+	{
+	"question": "What is the best way to decouple HTML from JavaScript?",
+	"choices": ["Underscore.js", "Handlebars.js","Mustache.js","EJS","Dust.js"],
+	"correctAnswer": 1,
+	"answer": null
+	}
+]
